@@ -72,7 +72,7 @@ class Atlas{
 	 * @param lat latitude
 	 * @return coordinates to Lambert Zone I
 	 */
-	private static function WGS84toLambertZoneI($lon, $lat) {
+	public static function WGS84toLambertI($lon, $lat) {
 
         $lambda_w =  $lon * M_PI / 180;
         $phi_w = $lat * M_PI / 180;
@@ -125,9 +125,9 @@ class Atlas{
         $L = log(tan(M_PI / 4 + $phi_n / 2) * pow(((1 - $e_n * sin($phi_n)) / (1 + $e_n * sin($phi_n))), ($e_n / 2)));
 
         $X_lz1 = $Xs + $c * exp((-$n * $L)) * sin($n * ($lambda_n - $lambda0));
-        $Y_lz1 = $Ys - $c * exp((-$n * $L)) * cos($n * ( lambda_n - $lambda0));
+        $Y_lz1 = $Ys - $c * exp((-$n * $L)) * cos($n * ($lambda_n - $lambda0));
                 
-        return array('x' => X_lz1, 'y' => Y_lz1);
+        return array('x' => $X_lz1, 'y' => $Y_lz1);
     }
 	
 	/**
@@ -136,7 +136,7 @@ class Atlas{
 	 * @param lat latitude
 	 * @return coordinates to Lambert Zone II coordinates
 	 */
-	private static function WGS84toLambertZoneII($lon, $lat) {
+	public static function WGS84toLambertII($lon, $lat) {
 
         $lambda_w =  $lon * M_PI / 180 ;
         $phi_w = $lat * M_PI / 180 ;
@@ -163,12 +163,12 @@ class Atlas{
         $a_n = 6378249.2;
         $b_n = 6356515.0;
 
-        $e2_n = ($a_n * $a_n-b_n * $b_n)/($a_n * $a_n);
+        $e2_n = ($a_n * $a_n - $b_n * $b_n)/($a_n * $a_n);
 
         $epsilon = pow(10, -10);
        
         $p0 = atan($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n) * (1 - ($a_n * $e2_n) / (sqrt($X_n * $X_n + $Y_n * $Y_n + $Z_n * $Z_n))));
-        $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * $pow(sin($p0) , 2))))));
+        $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0) , 2))))));
                         
         while(!(abs($p1 - $p0) < $epsilon)){
 
@@ -192,7 +192,7 @@ class Atlas{
         $X_lz2 = $Xs + $c * exp((-$n * $L)) * sin($n * ($lambda_n - $lambda0));
         $Y_lz2 = $Ys - $c * exp((-$n * $L)) * cos($n * ($lambda_n - $lambda0));
                 
-        return array('x' => X_lz2, 'y' => Y_lz2);        
+        return array('x' => $X_lz2, 'y' => $Y_lz2);        
     }
 	
 	/**
@@ -201,7 +201,7 @@ class Atlas{
 	 * @param lat latitude
 	 * @return coordinates in extented Lambert II
 	 */
-	private static function WGS84toLambert2e($lon, $lat){
+	public static function WGS84toLambertIIE($lon, $lat){
 
         $lambda_w = $lon * M_PI / 180;
         $phi_w = $lat * M_PI / 180;
@@ -221,9 +221,9 @@ class Atlas{
         $dY = 60.0;
         $dZ = -320.0;
 
-        $X_n = X_w + dX;
-        $Y_n = Y_w + dY;
-        $Z_n = Z_w + dZ;
+        $X_n = $X_w + $dX;
+        $Y_n = $Y_w + $dY;
+        $Z_n = $Z_w + $dZ;
         
         $a_n = 6378249.2;
         $b_n = 6356515.0;
@@ -233,9 +233,9 @@ class Atlas{
         $epsilon = pow(10, -10);
        
         $p0 = atan($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n) * (1 - ($a_n * $e2_n) / (sqrt($X_n * $X_n + $Y_n * $Y_n + $Z_n * $Z_n))));
-        $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos(p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0), 2))))));
+        $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0), 2))))));
                 
-        while(!(Math.abs($p1 - $p0) < $epsilon)){
+        while(!(abs($p1 - $p0) < $epsilon)){
 
             $p0 = $p1;
             $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0) , 2)))))); 
@@ -258,7 +258,7 @@ class Atlas{
         $X_l2e = $Xs + $c * exp((-$n * $L)) * sin($n * ($lambda_n - $lambda0));
         $Y_l2e = $Ys - $c * exp((-$n * $L)) * cos($n * ($lambda_n - $lambda0));
         
-        return array('x' => X_l2e, 'y' => Y_l2e);
+        return array('x' => $X_l2e, 'y' => $Y_l2e);
     }
     
     /**
@@ -267,7 +267,7 @@ class Atlas{
 	 * @param lat latitude
 	 * @return coordinates in Lambert Zone III
 	 */
-	private static function WGS84toLambertZoneIII($lon, $lat){
+	public static function WGS84toLambertIII($lon, $lat){
 
         $lambda_w = $lon * M_PI / 180 ;
         $phi_w = $lat * M_PI / 180 ;
@@ -321,10 +321,10 @@ class Atlas{
         
         $L = log(tan(M_PI / 4 + $phi_n / 2) * pow(((1 - $e_n * sin($phi_n)) / (1 + $e_n * sin($phi_n))), ($e_n / 2)));
 
-        $X_lz3 = $Xs + $c * exp((-$n * L)) * sin($n * ($lambda_n - $lambda0));
+        $X_lz3 = $Xs + $c * exp((-$n * $L)) * sin($n * ($lambda_n - $lambda0));
         $Y_lz3 = $Ys - $c * exp((-$n * $L)) * cos($n * ($lambda_n - $lambda0));
         
-        return array('x' => X_lz3, 'y' => Y_lz3);
+        return array('x' => $X_lz3, 'y' => $Y_lz3);
     }
 	
 
@@ -334,9 +334,9 @@ class Atlas{
 	 * @param lat latitude
 	 * @return coordinates to Lambert Zone IV
 	 */
-	private static function WGS84toLambertZoneIV($lon, $lat){
+	public static function WGS84toLambertIV($lon, $lat){
 
-        $lambda_w =  lon * M_PI / 180 ;
+        $lambda_w =  $lon * M_PI / 180 ;
         $phi_w = $lat * M_PI / 180 ;
                 
         $a_w = 6378137.0;
@@ -361,7 +361,7 @@ class Atlas{
         $a_n = 6378249.2;
         $b_n = 6356515.0;
 
-        $e2_n = ($a_n * $a_n-b_n * $b_n) / ($a_n * $a_n);
+        $e2_n = ($a_n * $a_n - $b_n * $b_n) / ($a_n * $a_n);
 
         $epsilon = pow(10, -10);
        
@@ -370,7 +370,7 @@ class Atlas{
                 
         while(!(abs($p1 - $p0) < $epsilon)){
 
-            $p0 = p1;
+            $p0 = $p1;
             $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0), 2)))))); 
         }
         
@@ -391,6 +391,6 @@ class Atlas{
         $X_lz4 = $Xs + $c * exp((-$n * $L)) * sin($n * ($lambda_n - $lambda0));
         $Y_lz4 = $Ys - $c * exp((-$n * $L)) * cos($n * ($lambda_n - $lambda0));
         
-        return array('x' => X_lz4, 'y' => Y_lz4);
+        return array('x' => $X_lz4, 'y' => $Y_lz4);
     }
 }
