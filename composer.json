@@ -1,0 +1,23 @@
+{
+    "name" : "olousouzian/atlasbundle",
+    "description" : "Symfony 2.X bundle for easy conversion between GPS and Lambert coordinates",
+    "type" : "symfony-bundle",
+    "authors" : [{
+	"name" : "Fabien Olousouzian",
+	"email" : "olousouzian.fabien@gmail.com"
+    }],
+    "keywords" : [
+	"atlas", "bundle", "lambert", "gps", "longitude", "latitude", "symfony"
+    ],
+    "license" : [
+	"MIT"
+    ],   
+    "autoload" : {
+	"psr-0" : {
+	    "Olousouzian\\AtlasBundle" : ""
+	}
+    },
+    "target-dir" : "Olousouzian/AtlasBundle",
+    "repositories" : [{
+    }]
+}

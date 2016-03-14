@@ -1,0 +1,3 @@
+olousouzian_atlas_homepage:
+    path:     /
+    defaults: { _controller: OlousouzianAtlasBundle:Default:index }
