@@ -1,6 +1,6 @@
 <?php
 
-namespace AtlasLib;
+namespace Olousouzian\AtlasBundle\Library;
 
 class Elipsoide {
     

@@ -7,7 +7,7 @@
 	"email" : "olousouzian.fabien@gmail.com"
     }],
     "keywords" : [
-	"atlas", "bundle", "lambert", "gps", "longitude", "latitude", "symfony"
+	"atlas", "bundle", "lambert", "gps", "longitude", "latitude", "symfony", "WGS84", "lambert93"
     ],
     "license" : [
 	"MIT"

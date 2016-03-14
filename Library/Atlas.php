@@ -1,8 +1,6 @@
 <?php
 
-namespace AtlasLib;
-
-require_once("Elipsoide.php");
+namespace Olousouzian\AtlasBundle\Library;
 
 /**
  * Main class for this bundle
@@ -26,7 +24,7 @@ class Atlas{
 	 * @param lat latitude
 	 * @return coordinates in RGF93 (Lambert 93)
 	 */
-    public static function WSG84toLambert93($longitude, $latitude){
+    public static function WGS84toLambert93($longitude, $latitude){
         
         // System WGS84
         $A = 6378137; 
