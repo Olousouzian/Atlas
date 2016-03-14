@@ -8,7 +8,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use Olousouzian\AkitaBundle\Library\Atlas;
+use Olousouzian\AtlasBundle\Library\Atlas;
 
 class AtlasCommand extends ContainerAwareCommand
 {
