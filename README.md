@@ -13,8 +13,6 @@ For more details please read this following links :
 
 ## How to install ?
 
-*Work in progress : **COMING SOON** *
-
 Install it with Composer 
 
 ```sh
