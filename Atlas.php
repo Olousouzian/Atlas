@@ -4,6 +4,9 @@ namespace AtlasLib;
 
 require_once("Elipsoide.php");
 
+/**
+ * Main class for this bundle
+ */
 class Atlas{
     
     // Default threshold for the Bessel algorithm of the Inverse Geodesy Problem
@@ -16,83 +19,29 @@ class Atlas{
     // North hemisphere = 1
     // South hemisphere = -1    
     const HEMISPHERE = 1;
-    
+        
     /**
-     * The method males the conversion between geodesic coordinates to projected coordiantes in a UTM zone forced
-     */     
-    public static function geo2utm($lon, $lat, $elip, $forced){
-        
-        // Elipsoide
-        $se2 = $elip->getSe2();
-        $c = $elip->getC();
-
-
-        // Correct the long or lat        
-        if ($lon > 180){
-            $lon = 180;
-        } else if ($lon < -180){
-            $lon = -180;
-        }
-        
-        if ($lat > 90){
-            $lat = 90;
-        } else if ($lat < -90){
-            $lat = -90;
-        }
-        
-        // Degrees to radians
-        $rlon = ($lon * M_PI) / 180.0;
-        $rlat = ($lat * M_PI) / 180.0;
-        
-        // Calculate the zone
-        $hus = intval($forced);
-        $huso = doubleval($hus);
-        
-        // Average longitude of the zone
-        $lonmedia =($huso * 6.0) - 183;
-        
-        // Angular distance between the point and the central meridian of the zone
-        $rilon = $rlon - (($lonmedia * M_PI) / 180.0);
-        
-        // Operates
-        $A = (cos($rlat)) * (sin($rilon));
-        $CC = (0.5) * (log((1 + A) / (1 - A)));
-        $n = (atan((tan($rlat)) / (cos($rilon)))) - $rlat;
-        $v = ($c * 0.9996) / sqrt((1 + $se2 * pow(cos($rilon), 2)));
-        $S = ($se2 * pow($CC, 2) * pow(cos($rlat), 2)) / 2.0;
-        $A1 = sin(2 * $rlat);
-        $A2 = $A1 * pow(cos($rlat), 2);
-        $J2 = $rlat + ($A1 / 2);
-        $J4 = (3 * $J2 + $A2) / 4;
-        $J6 = (5 * J4 + $A2 * pow(cos($rlat), 2)) / 3;
-        $alfa = (3.0 / 4) * $se2;
-        $beta = (5.0 + 3) * pow($alfa, 2);
-        $gamma = (35.0 / 27) * pow($alfa, 3);
-        $B = 0.9996 * $c * ($rlat - ($alfa * J2) + ($beta * $J4) - ($gamma * $J6));
-        $x = $CC * $v * (1 + ($S / 3 )) + 500000;
-        $y = $n * $v * (1 + $S) + $B;
-        
-        // For latitudes in the south hemi
-        if ($lat < 0){
-            $y = $y + 10000000;
-        }
-        
-        return array('x' => $x, 'y' => $y);                     
-    }
-    
+	 * Converts WGS84 coordinates RGF93 (Lambert 93)
+	 * @param lon longitude
+	 * @param lat latitude
+	 * @return coordinates in RGF93 (Lambert 93)
+	 */
     public static function WSG84toLambert93($longitude, $latitude){
+        
         // System WGS84
         $A = 6378137; 
         $e = 0.08181919106;
+        
+        // Projections parameters
         
         $lc = deg2rad(3);
         $phi0 = deg2rad(46.5);
         $phi1 = deg2rad(44);
         $phi2 = deg2rad(49);
         
-        $x0 = 700000;
-        $y0 = 6600000;
-        
+        $x0 = 700000; // origin
+        $y0 = 6600000; // origin
+                
         $phi = deg2rad($latitude);
         $l = deg2rad($longitude);
         
@@ -114,5 +63,201 @@ class Atlas{
         $y93 = $ys - $c * exp(-1 * $n * $gl) * cos($n * ($l - $lc));
         
         return array('x' => $x93, 'y' => $y93);                
-    }    
+    }
+    
+    
+    /**
+	 * Converts WGS84 coordinates to the Lambert Zone I
+	 * @param lon longitude
+	 * @param lat latitude
+	 * @return coordinates to Lambert Zone I
+	 */
+	private static function WGS84toLambertZoneI($lon, $lat) {
+
+        $lambda_w =  $lon * M_PI / 180;
+        $phi_w = $lat * M_PI / 180;
+        
+        $a_w = 6378137.0;
+        $b_w = 6356752.314;
+
+        $e2_w = ($a_w * $a_w - $b_w * $b_w) / ($a_w * $a_w);
+
+        $N = $a_w / sqrt(1 - $e2_w * pow(sin($phi_w), 2));
+
+        $X_w = $N * cos($phi_w) * cos($lambda_w);
+        $Y_w = $N * cos($phi_w) * sin($lambda_w);
+        $Z_w = $N * (1 - $e2_w) * sin($phi_w);
+           
+        $dX = 168.0;
+        $dY = 60.0;
+        $dZ = -320.0;
+
+        $X_n = $X_w + $dX;
+        $Y_n = $Y_w + $dY;
+        $Z_n = $Z_w + $dZ;
+               
+        $a_n = 6378249.2;
+        $b_n = 6356515.0;
+
+        $e2_n = ($a_n * $a_n - $b_n * $b_n) / ($a_n * $a_n);
+
+        $epsilon = pow(10, -10);
+       
+        $p0 = atan($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n) * (1 - ($a_n * $e2_n) / (sqrt($X_n * $X_n + $Y_n * $Y_n + $Z_n * $Z_n))));
+        $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n))/(1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0), 2))))));
+                
+        while(!(abs($p1 - $p0) < $epsilon)){
+            $p0 = $p1; 
+            $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0), 2)))))); 
+        }
+        
+        $phi_n = $p1;
+        $lambda_n = atan($Y_n / $X_n);
+        
+        $n = 0.7604059656;
+        $c = 11603796.98;
+        $Xs = 600000.0;
+        $Ys = 5657616.674;
+            
+        $e_n = sqrt($e2_n);
+        $lambda0 = 0.04079234433198;   
+        
+        $L = log(tan(M_PI / 4 + $phi_n / 2) * pow(((1 - $e_n * sin($phi_n)) / (1 + $e_n * sin($phi_n))), ($e_n / 2)));
+
+        $X_lz1 = $Xs + $c * exp((-$n * $L)) * sin($n * ($lambda_n - $lambda0));
+        $Y_lz1 = $Ys - $c * exp((-$n * $L)) * cos($n * ( lambda_n - $lambda0));
+                
+        return array('x' => X_lz1, 'y' => Y_lz1);
+    }
+	
+	/**
+	 * Converts WGS84 coordinates to Lambert Zone II coordinates
+	 * @param lon longitude
+	 * @param lat latitude
+	 * @return coordinates to Lambert Zone II coordinates
+	 */
+	private static function WGS84toLambertZoneII($lon, $lat) {
+
+        $lambda_w =  $lon * M_PI / 180 ;
+        $phi_w = $lat * M_PI / 180 ;
+                
+        $a_w = 6378137.0;
+        $b_w = 6356752.314;
+
+        $e2_w = ($a_w * $a_w - $b_w * $b_w) / ($a_w * $a_w);
+
+        $N = $a_w / sqrt(1 - $e2_w * pow(sin($phi_w), 2));
+
+        $X_w = $N * cos($phi_w) * cos($lambda_w);
+        $Y_w = $N * cos($phi_w) * sin($lambda_w);
+        $Z_w = $N * (1 - $e2_w) * sin($phi_w);
+        
+        $dX = 168.0;
+        $dY = 60.0;
+        $dZ = -320.0;
+
+        $X_n = $X_w + $dX;
+        $Y_n = $Y_w + $dY;
+        $Z_n = $Z_w + $dZ;
+        
+        $a_n = 6378249.2;
+        $b_n = 6356515.0;
+
+        $e2_n = ($a_n * $a_n-b_n * $b_n)/($a_n * $a_n);
+
+        $epsilon = pow(10, -10);
+       
+        $p0 = atan($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n) * (1 - ($a_n * $e2_n) / (sqrt($X_n * $X_n + $Y_n * $Y_n + $Z_n * $Z_n))));
+        $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * $pow(sin($p0) , 2))))));
+                        
+        while(!(abs($p1 - $p0) < $epsilon)){
+
+            $p0 = $p1;
+            $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0), 2)))))); 
+        }
+        
+        $phi_n = $p1;
+        $lambda_n = atan($Y_n / $X_n);
+        
+        $n = 0.7289686274;
+        $c = 11745793.39;
+        $Xs = 600000.0;
+        $Ys = 6199965.768;
+            
+        $e_n = sqrt($e2_n);
+        $lambda0 = 0.04079234433198;   
+        
+        $L = log(tan(M_PI / 4 + $phi_n / 2) * pow(((1 - $e_n * sin($phi_n)) / (1 + $e_n * sin($phi_n))),($e_n / 2)));
+
+        $X_lz2 = $Xs + $c * exp((-$n * $L)) * sin($n * ($lambda_n - $lambda0));
+        $Y_lz2 = $Ys - $c * exp((-$n * $L)) * cos($n * ($lambda_n - $lambda0));
+                
+        return array('x' => X_lz2, 'y' => Y_lz2);        
+    }
+	
+	/**
+	 * Converts WGS84 coordinates to the Extended Lambert II	 
+	 * @param lon longitude
+	 * @param lat latitude
+	 * @return coordinates in extented Lambert II
+	 */
+	private static function WGS84toLambert2e($lon, $lat){
+
+        $lambda_w = $lon * M_PI / 180;
+        $phi_w = $lat * M_PI / 180;
+                
+        $a_w = 6378137.0;
+        $b_w = 6356752.314;
+
+        $e2_w = ($a_w * $a_w - $b_w * $b_w) / ($a_w * $a_w);
+
+        $N = $a_w / sqrt(1 - $e2_w * pow(sin($phi_w), 2));
+
+        $X_w = $N * cos($phi_w) * cos($lambda_w);
+        $Y_w = $N * cos($phi_w) * sin($lambda_w);
+        $Z_w = $N * (1 - $e2_w) * sin($phi_w);
+        
+        $dX = 168.0;
+        $dY = 60.0;
+        $dZ = -320.0;
+
+        $X_n = X_w + dX;
+        $Y_n = Y_w + dY;
+        $Z_n = Z_w + dZ;
+        
+        $a_n = 6378249.2;
+        $b_n = 6356515.0;
+
+        $e2_n = ($a_n * $a_n - $b_n * $b_n) / ($a_n * $a_n);
+
+        $epsilon = pow(10, -10);
+       
+        $p0 = atan($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n) * (1 - ($a_n * $e2_n) / (sqrt($X_n * $X_n + $Y_n * $Y_n + $Z_n * $Z_n))));
+        $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos(p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0), 2))))));
+                
+        while(!(Math.abs($p1 - $p0) < $epsilon)){
+
+            $p0 = $p1;
+            $p1 = atan(($Z_n / sqrt($X_n * $X_n + $Y_n * $Y_n)) / (1 - ($a_n * $e2_n * cos($p0)) / (sqrt(($X_n * $X_n + $Y_n * $Y_n) * (1 - $e2_n * pow(sin($p0) , 2)))))); 
+        }
+        
+        $phi_n = $p1;
+        $lambda_n = atan($Y_n / $X_n);
+        
+        $n = 0.7289686274;
+        $c = 11745793.39;
+        $Xs = 600000.0;
+        $Ys = 8199695.768;
+            
+        $e_n = sqrt($e2_n);
+        $lambda0 = 0.04079234433198;   
+        
+        $L =log(tan(M_PI / 4 + $phi_n / 2) * pow(((1 - $e_n * sin($phi_n)) / (1 + $e_n * sin($phi_n))), ($e_n / 2)));
+
+
+        $X_l2e = $Xs + $c * exp((-$n * $L)) * sin($n * ($lambda_n - $lambda0));
+        $Y_l2e = $Ys - $c * exp((-$n * $L)) * cos($n * ($lambda_n - $lambda0));
+        
+        return array('x' => X_l2e, 'y' => Y_l2e);
+    }
 }
